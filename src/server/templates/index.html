@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RC Car Control</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        min-height: 100vh;
+        color: white;
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 20px;
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+        height: 100vh;
+      }
+
+      /* Video Section */
+      .video-section {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .video-header {
+        padding: 15px 20px;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .video-header h2 {
+        font-size: 1.2rem;
+        font-weight: 500;
+      }
+
+      .status-badge {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .status-connected {
+        background: linear-gradient(135deg, #00c853, #00e676);
+        color: #1a1a2e;
+      }
+
+      .status-disconnected {
+        background: linear-gradient(135deg, #ff1744, #ff5252);
+      }
+
+      .video-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background: #000;
+      }
+
+      #videoStream {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 10px;
+      }
+
+      .video-placeholder {
+        color: #666;
+        text-align: center;
+      }
+
+      .video-placeholder svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+      }
+
+      /* Control Panel */
+      .control-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel-card {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .panel-card h3 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+        color: #a0a0a0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Control Buttons */
+      .control-grid {
+        display: grid;
+        grid-template-areas:
+          ". up ."
+          "left stop right"
+          ". down .";
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .control-btn {
+        aspect-ratio: 1;
+        border: none;
+        border-radius: 15px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .control-btn span {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+      }
+
+      .btn-up {
+        grid-area: up;
+      }
+      .btn-down {
+        grid-area: down;
+      }
+      .btn-left {
+        grid-area: left;
+      }
+      .btn-right {
+        grid-area: right;
+      }
+      .btn-stop {
+        grid-area: stop;
+      }
+
+      .btn-direction {
+        background: linear-gradient(145deg, #3a4a6b, #2a3a5b);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-direction:hover {
+        background: linear-gradient(145deg, #4a5a7b, #3a4a6b);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .btn-direction:active,
+      .btn-direction.active {
+        background: linear-gradient(145deg, #00c853, #00e676);
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(0, 200, 83, 0.5);
+      }
+
+      .btn-stop {
+        background: linear-gradient(145deg, #ff4444, #cc0000);
+        color: white;
+        box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+      }
+
+      .btn-stop:hover {
+        background: linear-gradient(145deg, #ff5555, #dd1111);
+        transform: translateY(-2px);
+      }
+
+      .btn-stop:active {
+        background: linear-gradient(145deg, #ff6666, #ee2222);
+        transform: translateY(0);
+      }
+
+      /* Current Command Display */
+      .current-command {
+        text-align: center;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        margin-bottom: 10px;
+      }
+
+      .current-command .label {
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 5px;
+      }
+
+      .current-command .command {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #00e676;
+      }
+
+      /* Command History */
+      .history-list {
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+      }
+
+      .history-item .time {
+        color: #888;
+      }
+
+      .history-item .cmd {
+        font-weight: 600;
+        color: #00e676;
+      }
+
+      /* Keyboard Hint */
+      .keyboard-hint {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+      }
+
+      .key-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .key {
+        display: inline-block;
+        padding: 5px 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        font-size: 0.8rem;
+        font-weight: bold;
+      }
+
+      .key-label {
+        font-size: 0.75rem;
+        color: #888;
+      }
+
+      /* Connection Info */
+      .connection-info {
+        font-size: 0.85rem;
+        color: #888;
+      }
+
+      .connection-info div {
+        margin-bottom: 5px;
+      }
+
+      .connection-info strong {
+        color: #ccc;
+      }
+
+      /* Responsive */
+      @media (max-width: 900px) {
+        .container {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+
+        .video-section {
+          height: 50vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Video Section -->
+      <div class="video-section">
+        <div class="video-header">
+          <h2>📹 Camera Stream</h2>
+          <span id="mqttStatus" class="status-badge status-disconnected"
+            >Disconnected</span
+          >
+        </div>
+        <div class="video-container">
+          <img
+            id="videoStream"
+            src="http://192.168.4.2/stream"
+            alt="Camera Stream"
+            onerror="this.style.display='none'; document.getElementById('videoPlaceholder').style.display='block';"
+          />
+          <div
+            id="videoPlaceholder"
+            class="video-placeholder"
+            style="display: none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            <p>Waiting for camera stream...</p>
+            <p style="font-size: 0.8rem; margin-top: 10px">
+              Make sure ESP-CAM is connected to RC_CAR_AP
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control Panel -->
+      <div class="control-panel">
+        <!-- Current Command -->
+        <div class="panel-card">
+          <div class="current-command">
+            <div class="label">CURRENT COMMAND</div>
+            <div class="command" id="currentCommand">STOP</div>
+          </div>
+          <div class="keyboard-hint">
+            <div class="key-group">
+              <span class="key">W A S D</span>
+              <span class="key-label">or</span>
+              <span class="key">↑ ← ↓ →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="panel-card">
+          <h3>🎮 Controls</h3>
+          <div class="control-grid">
+            <button class="control-btn btn-direction btn-up" data-command="UP">
+              ▲
+              <span>W</span>
+            </button>
+            <button
+              class="control-btn btn-direction btn-left"
+              data-command="LEFT"
+            >
+              ◀
+              <span>A</span>
+            </button>
+            <button class="control-btn btn-stop" data-command="STOP">
+              ⬛
+              <span>STOP</span>
+            </button>
+            <button
+              class="control-btn btn-direction btn-right"
+              data-command="RIGHT"
+            >
+              ▶
+              <span>D</span>
+            </button>
+            <button
+              class="control-btn btn-direction btn-down"
+              data-command="DOWN"
+            >
+              ▼
+              <span>S</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Command History -->
+        <div class="panel-card">
+          <h3>📜 History</h3>
+          <div class="history-list" id="historyList">
+            <div class="history-item">
+              <span class="time">--:--:--</span>
+              <span class="cmd">Waiting...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connection Info -->
+        <div class="panel-card">
+          <h3>🔗 Connection</h3>
+          <div class="connection-info">
+            <div>
+              <strong>MQTT Broker:</strong>
+              <span id="brokerInfo">localhost:1883</span>
+            </div>
+            <div><strong>Topic:</strong> rc/move</div>
+            <div><strong>Camera:</strong> 192.168.4.2/stream</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let activeKey = null;
+      let mqttConnected = false;
+
+      // ===========================
+      // API Functions
+      // ===========================
+
+      async function sendCommand(command) {
+        try {
+          const response = await fetch("/api/move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command }),
+          });
+          const data = await response.json();
+          if (data.success) {
+            updateCurrentCommand(command);
+          }
+          return data;
+        } catch (error) {
+          console.error("Failed to send command:", error);
+        }
+      }
+
+      async function fetchStatus() {
+        try {
+          const response = await fetch("/api/status");
+          const data = await response.json();
+
+          mqttConnected = data.mqtt_connected;
+          updateMqttStatus(data.mqtt_connected);
+          document.getElementById("brokerInfo").textContent = data.broker;
+
+          if (data.history && data.history.length > 0) {
+            updateHistory(data.history);
+          }
+        } catch (error) {
+          console.error("Failed to fetch status:", error);
+          updateMqttStatus(false);
+        }
+      }
+
+      // ===========================
+      // UI Updates
+      // ===========================
+
+      function updateMqttStatus(connected) {
+        const statusEl = document.getElementById("mqttStatus");
+        if (connected) {
+          statusEl.textContent = "Connected";
+          statusEl.className = "status-badge status-connected";
+        } else {
+          statusEl.textContent = "Disconnected";
+          statusEl.className = "status-badge status-disconnected";
+        }
+      }
+
+      function updateCurrentCommand(command) {
+        document.getElementById("currentCommand").textContent = command;
+      }
+
+      function updateHistory(history) {
+        const historyList = document.getElementById("historyList");
+        historyList.innerHTML = history
+          .reverse()
+          .map(
+            (item) => `
+                <div class="history-item">
+                    <span class="time">${item.time}</span>
+                    <span class="cmd">${item.command}</span>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      // ===========================
+      // Button Controls (Mouse/Touch)
+      // ===========================
+
+      const buttons = document.querySelectorAll(".control-btn");
+
+      buttons.forEach((btn) => {
+        const command = btn.dataset.command;
+
+        // Mouse events
+        btn.addEventListener("mousedown", () => {
+          sendCommand(command);
+          if (command !== "STOP") {
+            btn.classList.add("active");
+          }
+        });
+
+        btn.addEventListener("mouseup", () => {
+          if (command !== "STOP") {
+            sendCommand("STOP");
+            btn.classList.remove("active");
+          }
+        });
+
+        btn.addEventListener("mouseleave", () => {
+          if (btn.classList.contains("active")) {
+            sendCommand("STOP");
+            btn.classList.remove("active");
+          }
+        });
+
+        // Touch events
+        btn.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          sendCommand(command);
+          if (command !== "STOP") {
+            btn.classList.add("active");
+          }
+        });
+
+        btn.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          if (command !== "STOP") {
+            sendCommand("STOP");
+            btn.classList.remove("active");
+          }
+        });
+      });
+
+      // ===========================
+      // Keyboard Controls
+      // ===========================
+
+      const keyMap = {
+        w: "UP",
+        arrowup: "UP",
+        s: "DOWN",
+        arrowdown: "DOWN",
+        a: "LEFT",
+        arrowleft: "LEFT",
+        d: "RIGHT",
+        arrowright: "RIGHT",
+        " ": "STOP",
+      };
+
+      const keyToButton = {
+        UP: ".btn-up",
+        DOWN: ".btn-down",
+        LEFT: ".btn-left",
+        RIGHT: ".btn-right",
+      };
+
+      document.addEventListener("keydown", (e) => {
+        if (activeKey) return;
+
+        const key = e.key.toLowerCase();
+        const command = keyMap[key];
+
+        if (command && command !== "STOP") {
+          activeKey = key;
+          sendCommand(command);
+
+          const btnSelector = keyToButton[command];
+          if (btnSelector) {
+            document.querySelector(btnSelector)?.classList.add("active");
+          }
+        } else if (key === " ") {
+          sendCommand("STOP");
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        const key = e.key.toLowerCase();
+
+        if (key === activeKey) {
+          const command = keyMap[key];
+          const btnSelector = keyToButton[command];
+
+          if (btnSelector) {
+            document.querySelector(btnSelector)?.classList.remove("active");
+          }
+
+          sendCommand("STOP");
+          activeKey = null;
+        }
+      });
+
+      // ===========================
+      // Initialize
+      // ===========================
+
+      // Fetch status initially and then every 2 seconds
+      fetchStatus();
+      setInterval(fetchStatus, 2000);
+
+      // Prevent context menu on control buttons
+      document.querySelectorAll(".control-btn").forEach((btn) => {
+        btn.addEventListener("contextmenu", (e) => e.preventDefault());
+      });
+    </script>
+  </body>
+</html>
