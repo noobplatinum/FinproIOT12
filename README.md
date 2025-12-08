@@ -37,6 +37,8 @@ The main challenge is integrating all these components into a cohesive, reliable
 We developed an IoT-Based Remote Controlled Car system with a distributed three-ESP32 architecture:
 
 **System Architecture:**
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/55152f00-2318-456e-a4b9-7c4c14b5a765" />
+
 
 1. **ESP32 Root (Access Point)**: Functions as the central WiFi Access Point connecting all system components. Uses power saving mode for power efficiency.
 
@@ -480,3 +482,4 @@ This project proves that with the ESP32 platform and proper system design, we ca
 [3] Aslam Hossain, "Surveillance Camera Car Using ESP32 CAM Module | ESP32 Surveillance Camera Car," YouTube, 2024. [Online]. Available: https://www.youtube.com/watch?v=IfB1w85Z2iE. [Accessed: Dec. 8, 2025].
 
 [4] hash include electronics, "Surveillance Car using ESP32 Cam module | ESP32 Camera wi-fi car," YouTube, 2021. [Online]. Available: https://www.youtube.com/watch?v=HfQ7lhhgDOk. [Accessed: Dec. 8, 2025].
+
