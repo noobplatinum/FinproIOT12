@@ -1,5 +1,7 @@
 # Charlie Kark IOT
 
+![alt text](image-6.png)
+
 **KELOMPOK 12**
 
 - Alexander Christhian (2306267025)
@@ -10,7 +12,6 @@
 ---
 
 ![alt text](image.png)
-![alt text](image-6.png)
 
 ## Introduction
 
@@ -482,4 +483,5 @@ This project proves that with the ESP32 platform and proper system design, we ca
 [3] Aslam Hossain, "Surveillance Camera Car Using ESP32 CAM Module | ESP32 Surveillance Camera Car," YouTube, 2024. [Online]. Available: https://www.youtube.com/watch?v=IfB1w85Z2iE. [Accessed: Dec. 8, 2025].
 
 [4] hash include electronics, "Surveillance Car using ESP32 Cam module | ESP32 Camera wi-fi car," YouTube, 2021. [Online]. Available: https://www.youtube.com/watch?v=HfQ7lhhgDOk. [Accessed: Dec. 8, 2025].
+
 
